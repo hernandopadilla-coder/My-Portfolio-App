@@ -1,5 +1,3 @@
-Here is the complete app.py script containing your multi-account stock and ETF portfolio tracker along with interactive Plotly asset allocation charts.
-Copy the entire code block below and paste it into app.py on GitHub:
 import streamlit as st
 import pandas as pd
 import yfinance as yf
@@ -132,4 +130,3 @@ if not df_portfolio.empty:
 
 else:
     st.info("No positions added yet. Use the sidebar on the left to add your stock or ETF holdings.")
-
