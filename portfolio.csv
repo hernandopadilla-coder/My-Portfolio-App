@@ -1,6 +1,5 @@
 Account,Ticker,Shares,Avg Price
-Taxable Brokerage,AAPL,15.5,175.20
-Taxable Brokerage,VTI,50,220.00
+Taxable Brokerage,
 Traditional IRA,SPY,30,410.50
 Traditional IRA,BND,100,72.30
 Roth IRA,VXUS,40,58.00
