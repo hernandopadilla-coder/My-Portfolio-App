@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import yfinance as yf
@@ -9,24 +10,33 @@ DATA_FILE = "portfolio.csv"
 
 def load_data():
     if os.path.exists(DATA_FILE):
-        return pd.read_csv(DATA_FILE)
+        df = pd.read_csv(DATA_FILE)
+        # Clean up empty rows or invalid data
+        df = df.dropna(subset=["Ticker"])
+        df["Ticker"] = df["Ticker"].astype(str).str.upper().str.strip()
+        return df
     return pd.DataFrame(columns=["Account", "Ticker", "Shares", "Avg Price"])
 
 def save_data(df):
     df.to_csv(DATA_FILE, index=False)
 
 def get_live_prices(tickers):
-    if not tickers:
+    # Filter out empty or non-string tickers
+    clean_tickers = [str(t).strip().upper() for t in tickers if pd.notna(t) and str(t).strip()]
+    if not clean_tickers:
         return {}
-    data = yf.Tickers(" ".join(tickers))
+    
     prices = {}
-    for ticker in tickers:
-        try:
-            # Fetch fast current market price
-            price = data.tickers[ticker].fast_info['lastPrice']
-            prices[ticker] = price
-        except Exception:
-            prices[ticker] = 0.0
+    try:
+        data = yf.Tickers(" ".join(clean_tickers))
+        for ticker in clean_tickers:
+            try:
+                price = data.tickers[ticker].fast_info['lastPrice']
+                prices[ticker] = price if price is not None else 0.0
+            except Exception:
+                prices[ticker] = 0.0
+    except Exception:
+        pass
     return prices
 
 # Page Configuration
@@ -53,11 +63,11 @@ with st.sidebar.form("add_position_form", clear_on_submit=True):
 
 # Main Dashboard Engine
 if not df_portfolio.empty:
-    # Fetch live price updates
-    unique_tickers = df_portfolio["Ticker"].unique().tolist()
+    # Fetch live price updates safely
+    unique_tickers = df_portfolio["Ticker"].dropna().unique().tolist()
     live_prices = get_live_prices(unique_tickers)
     
-    df_portfolio["Current Price"] = df_portfolio["Ticker"].map(live_prices)
+    df_portfolio["Current Price"] = df_portfolio["Ticker"].map(live_prices).fillna(0.0)
     df_portfolio["Cost Basis"] = df_portfolio["Shares"] * df_portfolio["Avg Price"]
     df_portfolio["Market Value"] = df_portfolio["Shares"] * df_portfolio["Current Price"]
     df_portfolio["Unrealized Gain/Loss"] = df_portfolio["Market Value"] - df_portfolio["Cost Basis"]
